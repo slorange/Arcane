@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Arcane.Cmd/Arcane.Cmd.csproj" />
+  <Project Path="Arcane.Core/Arcane.Core.csproj" />
+</Solution>
