@@ -3,15 +3,15 @@
 public abstract record GameEvent;
 
 public record GameStarted(List<string> PlayerNames) : GameEvent;
-
 public record RoundStarted(int RoundNumber) : GameEvent;
-
 public record PlayerJoined(string PlayerName) : GameEvent;
-
+public record PlayerGainedKnowledge(string PlayerName, int Amount) : GameEvent;
 public record PlayerGainedMana(string PlayerName, int Amount) : GameEvent;
-
 public record PlayerTookDamage(string PlayerName, int Amount, int RemainingHealth) : GameEvent;
-
 public record GameEnded() : GameEvent;
-
 public record ErrorOccurred(string Message) : GameEvent;
+public record SpellPurchased(string PlayerName, string SpellName) : GameEvent;
+public record MonsterSpawned(string Name, int Health) : GameEvent;
+public record MonsterTookDamage(string Name, int Damage, int RemainingHealth) : GameEvent;
+public record MonsterDefeated(string Name) : GameEvent;
+public record GameEventMessage(string Message) : GameEvent;
