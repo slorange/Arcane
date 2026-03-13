@@ -1,5 +1,6 @@
 ﻿using Arcane.Core.Events;
 using System.Reflection.Emit;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Arcane.Core.Cards;
 
@@ -28,7 +29,8 @@ public class Spell : Card
 	public Value Shield { get; }
 	public Value Lifesteal { get; }
 	public Value ManaGain { get; }
-	public StatusEffect StatusEffect { get; }
+	public StatusEffect StatusEffect { get; set; }
+	public PlayerEffect? PlayerEffect { get; set; }
 	public bool OncePerBattle { get; }
 
 	// Game state
@@ -109,13 +111,49 @@ public class Spell : Card
 			switch (StatusEffect.Type)
 			{
 				case StatusEffectType.Burn:
-					parts.Add($"burn {StatusEffect.DamagePerTurn} for {StatusEffect.Duration} turns");
+					parts.Add($"burn {StatusEffect.BurnDice}");
 					break;
 
 				case StatusEffectType.Freeze:
-					parts.Add($"freeze for {StatusEffect.Duration} turn");
+					parts.Add($"freeze for {StatusEffect.Duration} turn(s)");
+					break;
+
+				case StatusEffectType.Shock:
+					parts.Add($"shock for {StatusEffect.Duration} turn(s)");
+					break;
+
+				case StatusEffectType.Brittle:
+					parts.Add($"brittle for {StatusEffect.Duration} turn(s)");
+					break;
+
+				case StatusEffectType.Weak:
+					parts.Add($"weaken for {StatusEffect.Duration} turn(s)");
+					break;
+
+				case StatusEffectType.Blinded:
+					parts.Add($"blind for {StatusEffect.Duration} turn(s)");
+					break;
+
+				case StatusEffectType.Marked:
+					parts.Add($"mark for {StatusEffect.Duration} turn(s)");
 					break;
 			}
+		}
+
+		if (PlayerEffect != null)
+		{
+			var school = PlayerEffect.School == SpellSchool.None
+				? "spells"
+				: $"{PlayerEffect.School.ToString().ToLower()} spells";
+
+			var duration = PlayerEffect.Duration == null
+				? ""
+				: $" for {PlayerEffect.Duration} turn(s)";
+
+			if (PlayerEffect.ConsumeOnUse)
+				duration = " on next cast";
+
+			parts.Add($"{school} +{PlayerEffect.Modifier} die{duration}");
 		}
 
 		if (OncePerBattle)
@@ -137,6 +175,16 @@ public class Spell : Card
 	}
 }
 
+public enum TargetType
+{
+	Enemy,
+	AllEnemies,
+	Cleave,
+	Self,
+	Ally,
+	AllAllies
+}
+
 public enum SpellSchool
 {
 	None,
@@ -149,212 +197,33 @@ public enum SpellSchool
 	Blood,
 }
 
-public enum TargetType
-{
-	Enemy,
-	AllEnemies,
-	Cleave,
-	Self,
-	Ally,
-	AllAllies
-}
-
 public enum StatusEffectType
 {
 	None,
+	Marked,
 	Burn,
-	Freeze
+	Freeze,
+	Shock,
+	Brittle,
+	Blinded,
+	Weak,
 }
 
 public class StatusEffect
 {
 	public StatusEffectType Type { get; }
 	public int Duration { get; set; }
-	public Value? DamagePerTurn { get; }
+	public Dice? BurnDice { get; set; }
 
-	public StatusEffect(StatusEffectType type, int duration, Value? damagePerTurn = null)
+	public StatusEffect(StatusEffectType type, int duration, Dice? burnDice = null)
 	{
 		Type = type;
 		Duration = duration;
-		DamagePerTurn = damagePerTurn;
+		BurnDice = burnDice;
 	}
 
 	public StatusEffect Clone()
 	{
-		return new StatusEffect(Type, Duration, DamagePerTurn);
+		return new StatusEffect(Type, Duration, BurnDice);
 	}
 }
-
-public enum ValueKind
-{
-	Flat,
-	Dice,
-	Percent
-}
-
-public struct Value
-{
-	public ValueKind Type { get; }
-
-	public int Flat { get; }
-
-	public Dice Dice { get; }
-
-	public double Percent { get; }
-
-	public Value(int flat)
-	{
-		Type = ValueKind.Flat;
-		Flat = flat;
-		Dice = default;
-		Percent = 0;
-	}
-
-	public Value(Dice dice)
-	{
-		Type = ValueKind.Dice;
-		Dice = dice;
-		Flat = 0;
-		Percent = 0;
-	}
-
-	public Value(double percent)
-	{
-		Type = ValueKind.Percent;
-		Percent = percent;
-		Flat = 0;
-		Dice = default;
-	}
-
-	public Value(string text)
-	{
-		text = text.Trim().ToLower();
-
-		Flat = 0;
-		Dice = default;
-		Percent = 0;
-
-		// Percent
-		if (text.EndsWith("%"))
-		{
-			Type = ValueKind.Percent;
-
-			var number = text.Substring(0, text.Length - 1);
-			Percent = double.Parse(number) / 100.0;
-
-			return;
-		}
-
-		// Dice (XdY)
-		if (text.Contains("d"))
-		{
-			Type = ValueKind.Dice;
-
-			var parts = text.Split('d');
-
-			if (parts.Length != 2)
-				throw new ArgumentException($"Invalid dice format: {text}");
-
-			int count = int.Parse(parts[0]);
-			int sides = int.Parse(parts[1]);
-
-			Dice = new Dice(count, sides);
-
-			return;
-		}
-
-		// Flat number
-		if (int.TryParse(text, out int value))
-		{
-			Type = ValueKind.Flat;
-			Flat = value;
-			return;
-		}
-
-		throw new ArgumentException($"Invalid Value format: {text}");
-	}
-
-	public int Resolve(int baseValue)
-	{
-		switch (Type)
-		{
-			case ValueKind.Percent:
-				return (int)Math.Round(baseValue * Percent);
-			case ValueKind.Flat:
-			case ValueKind.Dice:
-			default:
-				return 0; // Shouldn't be called with these parameters
-		}
-	}
-
-	public int Resolve(List<GameEvent> events, string label = "")
-	{
-		switch (Type)
-		{
-			case ValueKind.Flat:
-				return Flat;
-
-			case ValueKind.Percent:
-				return 0; // Shouldn't be called with these parameters
-
-			case ValueKind.Dice:
-				var (total, rolls) = Dice.Roll();
-
-				if (label != "")
-				{
-					var rollText = string.Join(" + ", rolls);
-					events.Add(new GameEventMessage($"{label} rolls {Dice} -> ({rollText}) = {total}"));
-				}
-
-				return total;
-
-			default:
-				return 0;
-		}
-	}
-
-	public override string ToString()
-	{
-		return Type switch
-		{
-			ValueKind.Flat => Flat.ToString(),
-			ValueKind.Dice => $"{Dice.Count}d{Dice.Sides}",
-			ValueKind.Percent => $"{Percent * 100}%",
-			_ => "?"
-		};
-	}
-}
-
-public struct Dice
-{
-	static Random rng = new Random();
-
-	public int Count { get; }
-	public int Sides { get; }
-
-	public Dice(int count, int sides)
-	{
-		Count = count;
-		Sides = sides;
-	}
-
-	public (int total, List<int> rolls) Roll()
-	{
-		var rolls = new List<int>();
-		int total = 0;
-
-		for (int i = 0; i < Count; i++)
-		{
-			int r = rng.Next(1, Sides + 1);
-			rolls.Add(r);
-			total += r;
-		}
-
-		return (total, rolls);
-	}
-
-	public double Average => Count * (Sides + 1) / 2.0;
-
-	public override string ToString() => $"{Count}d{Sides}";
-}
-

@@ -1,6 +1,5 @@
-The following is summary you made in another chat for a project we're continuing here, with some edits from me.
-
 We are building a wizard themed board game called Arcane. Many of the themes, enemies, factions, and items come from Dresden Files, but there is influence from various other sources.
+This is the 4th chat where we work on this game together.
 
 The project has four phases:
 1 Implement the full game logic in code.
@@ -21,7 +20,7 @@ Within phase 1 there are 9 steps:
 8. Potions 
 9. Factions
 
-We are currently on step 5.
+We are currently finishing up step 5.
 
 1. Core engine and console app
 The project currently runs as a c# console application, but the game logic is contained inside a Core engine so the same engine could later support a graphical UI or Simulator where all user actions are automated and all game output is hidden
@@ -77,6 +76,12 @@ Values can be created from strings such as:
 
 Dice rolls generate both a result and a list of rolls so the console output can show the full roll breakdown.
 
+Dice can be upgraded and downgraded.
+Upgrades increase dice level first and then number of dice.
+Downgrades decrease number of dice and then dice level.
+Upgrade Example:
+2d10 -> 2d12 -> 2d20 -> 3d20 -> 4d20
+
 Spell effects supported so far include:
 Single target damage
 Area damage
@@ -84,10 +89,28 @@ Cleave damage
 Healing
 Mana generation
 Lifesteal
-Burn (damage over time)
-Freeze (skip next attack)
+Status Effects
+Player Buffs
+
+Status Effects
+Burn - burn applies a burn dice which downgrades each turn. Additional burns upgrade the dice
+Freeze - no action on the next turn
+Shock - double dice upgrade when taking damage from lightning attacks
+Brittle - dice upgrade when taking damage
+Weak - deal reduced damage
+Blinded - chance to miss
+Marked - Arcane flag for special interation with arcane spells
 
 Status effects are stored on monsters and tick at the end of the monster attack phase.
+
+A PlayerEffect contains:
+Spell School (or None for all spells)
+Modifier (dice upgrades/downgrades)
+Duration
+ConsumeOnUse flag
+
+These allow effects such as:
+"Your next fire spell is stronger"
 
 Market System
 There is a spell market where players can purchase spells.
@@ -134,7 +157,6 @@ Battles spawn groups of monsters based on a theme.
 Monster selection currently uses threat values to construct encounters appropriate for the current round.
 
 5. Schools and resistances
-Spell schools have been implemented but monster resistances/weaknesses/immunities have not.
 The schools are currently:
 Arcane
 Fire
@@ -143,6 +165,25 @@ Lightning
 Earth
 Holy
 Blood
+
+Monsters have:
+Resistances
+Weaknesses
+Immunities
+Status Immunities
+
+Monster themes apply default resistances which individual monsters can override.
+
+Example:
+Undead
+Weak to Holy and Fire
+Resistant to Blood and Ice
+Immune to Weak Status
+
+RestlessSpirit (Undead)
+Immune to ice and freeze
+
+The following have not been implemented:
 
 6. Artifact
 Artifacts are passive items that give buffs, either earned from battle or awarded from faction reputation
@@ -163,7 +204,14 @@ The Church (Holy), including the Knights of the Cross
 The Circle, Denarians, Vampire Courts, or The Outsiders (Blood) - undecided
 Lightning and Earth currently do not have a faction
 
+Some progress into phase 2 has also been made.
+The simulator has not been started but we have an Analyzer tool which computes Spell Value and estimates its appropriate mana cost so we have some spell balance.
+
+
 Playtesting notes:
-- The game currently encourages repeating the same few optimal spells because monsters do not yet react differently to different spell schools.
-- Enemy damage is currently high relative to player health. We need to implement shield spells and artifacts/tools before working on balance though.
-- With AoE Freeze spells, mana generation spells, and 3 actions between each enemy attack, all encouters are solved. Monster freeze immunity solves some of this but we also need to use a combination of giving freeze spells much higher mana cost, OncePerBattle flag, or keep them single target.
+- Need more ways to regain mana. Buff Channel to use a dice. Add two more mana gain spells. One onceperbattle and one repeatable
+- Training plateaus around 15 since we only get 15 actions per prep. Going above that takes at least 2 rounds for +1 mana. Need an Advanced Training card that increases cost and value of train by +1. Stackable, maybe ~8 knowledge, maybe 5 in the deck.
+- Enemy damage is too high, although if you survive the hit there is enough healing/lifesteal to get back to full. We need shields, and probably higher base health.
+- Not being able to target enemies is getting to be a problem.
+
+

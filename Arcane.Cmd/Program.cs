@@ -1,4 +1,5 @@
 ﻿using Arcane.Core;
+using Arcane.Core.Cards;
 using Arcane.Core.Commands;
 using Arcane.Core.Events;
 
@@ -15,6 +16,8 @@ internal class Program
 
 	Program()
 	{
+		Analyzer.AnalyzeSpells();
+
 		game = new Game();
 		DisplayGameState();
 		DisplayAvailableActions();
@@ -152,6 +155,27 @@ internal class Program
 					Console.WriteLine($"    {spell.GetPlayerDisplay()}");
 				}
 			}
+
+			if (player.Effects.Any())
+			{
+				Console.WriteLine("  Buffs:");
+
+				foreach (var effect in player.Effects)
+				{
+					var school = effect.School == SpellSchool.None
+						? "spells"
+						: effect.School.ToString().ToLower();
+
+					var duration = effect.Duration == null
+						? ""
+						: $" ({effect.Duration})";
+
+					if (effect.ConsumeOnUse)
+						duration = " (next cast)";
+
+					Console.WriteLine($"    {school} +{effect.Modifier} die{duration}");
+				}
+			}
 		}
 
 		if (phaseInfo.Phase == Phase.Prep)
@@ -188,7 +212,13 @@ internal class Program
 				{
 					if (monster.IsAlive)
 					{
-						var effectText = monster.Effects.Any() ? $" | {string.Join(", ", monster.Effects.Select(e => $"{e.Type}({e.Duration})"))}" : "";
+						var effectText = monster.Effects.Any()
+							? $" | {string.Join(", ", monster.Effects.Select(e =>
+								e.Type == StatusEffectType.Burn
+									? $"{e.Type}({e.BurnDice.Value})"
+									: $"{e.Type}({e.Duration})"
+							))}"
+							: ""; 
 						Console.WriteLine($"  {monster.Name} | HP: {monster.Health}{effectText}");
 					}
 					else

@@ -1,5 +1,7 @@
 ﻿using Arcane.Core.Cards;
 using Arcane.Core.Events;
+using System.Collections;
+using System.Runtime.InteropServices.Marshalling;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Arcane.Core;
@@ -75,18 +77,19 @@ public class SpellCastAction : PlayerAction
 				break;
 		}
 		ApplyAfterEffects(player, monsters, baseDamage, events);
+
+		player.TickEffects(events);
 	}
 
 	private int CastSingleTarget(Monster target, Player player, List<GameEvent> events)
 	{
-		int damage = _spell.Damage.Resolve(events, $"{_spell.Name}");
+		int damage = ResolveDamage(player, target, events);
 
 		target.TakeDamage(damage);
 
 		events.Add(new MonsterTookDamage(target.Name, damage, target.Health));
 
-		if (!target.IsAlive)
-			events.Add(new MonsterDefeated(target.Name));
+		if (!target.IsAlive) events.Add(new MonsterDefeated(target.Name));
 
 		return damage;
 	}
@@ -95,14 +98,13 @@ public class SpellCastAction : PlayerAction
 	{
 		var primary = monsters.First();
 
-		int damage = _spell.Damage.Resolve(events, $"{_spell.Name}");
+		int damage = ResolveDamage(player, primary, events);
 
 		primary.TakeDamage(damage);
 
 		events.Add(new MonsterTookDamage(primary.Name, damage, primary.Health));
 
-		if (!primary.IsAlive)
-			events.Add(new MonsterDefeated(primary.Name));
+		if (!primary.IsAlive) events.Add(new MonsterDefeated(primary.Name));
 
 		foreach (var monster in monsters.Skip(1))
 		{
@@ -112,8 +114,7 @@ public class SpellCastAction : PlayerAction
 
 			events.Add(new MonsterTookDamage(monster.Name, splash, monster.Health));
 
-			if (!monster.IsAlive)
-				events.Add(new MonsterDefeated(monster.Name));
+			if (!monster.IsAlive) events.Add(new MonsterDefeated(monster.Name));
 		}
 
 		return damage;
@@ -121,19 +122,46 @@ public class SpellCastAction : PlayerAction
 
 	private int CastAOE(List<Monster> monsters, Player player, List<GameEvent> events)
 	{
-		int damage = _spell.Damage.Resolve(events, $"{_spell.Name}");
-
+		int totalDamage = 0;
 		foreach (var monster in monsters)
 		{
+			int damage = ResolveDamage(player, monster, events);
+
 			monster.TakeDamage(damage);
 
 			events.Add(new MonsterTookDamage(monster.Name, damage, monster.Health));
 
 			if (!monster.IsAlive)
 				events.Add(new MonsterDefeated(monster.Name));
+
+			totalDamage += damage;
 		}
 
-		return damage;
+		return totalDamage;
+	}
+
+	private int ResolveDamage(Player player, Monster monster, List<GameEvent> events)
+	{
+		var value = _spell.Damage;
+
+		// Percent or Flat shouldn't happen here
+		if (value.Type == ValueKind.Percent) return 0;
+		if (value.Type == ValueKind.Flat) return value.Flat;
+
+		// For Dice:
+		if (monster.IsImmune(_spell))
+		{
+			events.Add(new GameEventMessage($"{monster.Name} is immune to {_spell.School}!"));
+			return 0;
+		}
+
+		var reasons = "";
+		var modifier = monster.ComputeModifier(_spell, ref reasons);
+		modifier += player.ComputeModifier(_spell, ref reasons);
+
+		var dice = value.Dice.Modify(modifier, events, reasons);
+
+		return dice.Roll(events, _spell.Name);
 	}
 
 	private void ApplyAfterEffects(Player player, List<Monster> monsters, int damageDealt, List<GameEvent> events)
@@ -165,15 +193,21 @@ public class SpellCastAction : PlayerAction
 			events.Add(new PlayerGainedMana(player.Name, mana));
 		}
 
-		if (_spell.StatusEffect.Type != StatusEffectType.None)
+		var effect = _spell.StatusEffect;
+
+		if (effect.Type != StatusEffectType.None)
 		{
 			foreach (var m in monsters)
 			{
-				var effect = _spell.StatusEffect.Clone();
-				m.Effects.Add(effect);
-
-				events.Add(new GameEventMessage($"{m.Name} is {effect.Type.ToString().ToLower()} for {effect.Duration} turn(s)!"));
+				m.GiveEffect(effect, events);
 			}
+		}
+
+		if (_spell.PlayerEffect != null)
+		{
+			var peffect = _spell.PlayerEffect.Clone();
+			player.Effects.Add(peffect);
+			//events.Add(new GameEventMessage($"{player.Name} gains a magical buff."));
 		}
 	}
 }

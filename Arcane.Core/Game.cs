@@ -69,18 +69,36 @@ public class Game
 			}
 			else
 			{
-				int damage = monster.AttackDamage.Resolve(events, $"{monster.Name} attack");
+				if (monster.HasEffect(StatusEffectType.Blinded) && rng.NextDouble() < 0.5)
+				{
+					events.Add(new GameEventMessage($"{monster.Name} misses due to blindness!"));
+				}
+				else
+				{
 
-				player.TakeDamage(damage);
+					var attack = monster.AttackDamage;
 
-				events.Add(new PlayerTookDamage(player.Name, damage, player.Health));
+					int weakStacks = monster.Effects.Count(e => e.Type == StatusEffectType.Weak);
+					if (weakStacks > 0 && attack.Type == ValueKind.Dice)
+					{
+						var dice = attack.Dice;
+						dice = dice.Modify(weakStacks);
+						attack = new Value(dice);
+						events.Add(new GameEventMessage($"{monster.Name} is weakened!"));
+					}
+
+					int damage = attack.Resolve(events, $"{monster.Name} attack");
+
+					player.TakeDamage(damage);
+
+					events.Add(new PlayerTookDamage(player.Name, damage, player.Health));
+				}
 			}
 
 			foreach (var effect in monster.Effects.Where(e => e.Type == StatusEffectType.Burn))
 			{
-				var damage = effect.DamagePerTurn.Value.Resolve(events, "Burn");
+				var damage = effect.BurnDice.Value.Roll(events, $"{monster.Name} Burn");
 				monster.TakeDamage(damage);
-				events.Add(new GameEventMessage($"{monster.Name} burns for {damage} damage!"));
 			}
 
 			monster.TickEffects(events);
@@ -137,7 +155,7 @@ public class Game
 		var monsters = new List<Monster>();
 
 		// difficulty scaling
-		int threatBudget = 4 + round * 2;
+		int threatBudget = round * 2;
 
 		// pick a theme
 		var theme = PickTheme();
