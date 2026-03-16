@@ -43,7 +43,18 @@ public class Game
 				return events;
 			}
 
-			action.Execute(_state, player, events);
+			if (action is SpellCastAction && !string.IsNullOrEmpty(exec.Parameters))
+			{
+				var monsters = _state.Monsters.Where(m => m.IsAlive).ToList();
+				var target = monsters.FirstOrDefault(m => m.Name.Equals(exec.Parameters, StringComparison.OrdinalIgnoreCase));
+				if (target == null)
+				{
+					events.Add(new ErrorOccurred($"Target {exec.Parameters} not available."));
+					return events;
+				}
+			}
+
+			action.Execute(_state, player, events, exec.Parameters);
 
 			var result = _state.AdvanceAfterPlayerAction();
 
@@ -82,7 +93,7 @@ public class Game
 					if (weakStacks > 0 && attack.Type == ValueKind.Dice)
 					{
 						var dice = attack.Dice;
-						dice = dice.Modify(weakStacks);
+						dice = dice.Modify(-weakStacks);
 						attack = new Value(dice);
 						events.Add(new GameEventMessage($"{monster.Name} is weakened!"));
 					}
@@ -91,7 +102,7 @@ public class Game
 
 					player.TakeDamage(damage);
 
-					events.Add(new PlayerTookDamage(player.Name, damage, player.Health));
+					events.Add(new PlayerTookDamage(player.Name, damage, player.Health, player.Shield));
 				}
 			}
 
@@ -143,6 +154,7 @@ public class Game
 
 		foreach (var player in _state.Players.Where(p => p.IsAlive))
 		{
+			player.ResetShield();
 			player.Resources.FullMana();
 			//events.Add(new PlayerGainedMana(player.Name, 3));
 			foreach (var spell in player.Spells)
@@ -203,15 +215,15 @@ public class Game
 		{
 			// Intrinsic actions
 			new ChannelAction(),
-			new TrainAction(),
+			new TrainAction(player.AdvancedTraining),
 			new LearnAction(),
 			new EndTurnAction(),
 			new RestAction()
 		};
 
 		// Market buy actions
-		foreach (var spell in GetMarket().Current)
-			actions.Add(new BuySpellAction(spell));
+		foreach (var card in GetMarket().Current)
+			actions.Add(new BuyCardAction(card));
 
 		// Spell cast actions
 		foreach (var spell in player.Spells)

@@ -97,9 +97,13 @@ public  class Analyzer
 		if (s.Heal.Type == ValueKind.Dice)
 			power += ExpectedDice(s.Heal.Dice);
 
+		// SHIELD
+		if (s.Shield.Type == ValueKind.Dice)
+			power += ExpectedDice(s.Shield.Dice) * 1.5;
+
 		// MANA
 		if (s.ManaGain.Type == ValueKind.Dice)
-			power += ExpectedDice(s.ManaGain.Dice) * 2;
+			power += ExpectedDice(s.ManaGain.Dice);
 
 		// LIFESTEAL
 		if (s.Lifesteal.Type == ValueKind.Percent && s.Damage.Type == ValueKind.Dice)
@@ -140,7 +144,7 @@ public  class Analyzer
 			power += value;
 		}
 
-		if (s.OncePerBattle) power /= 2;
+		if (s.OncePerBattle) power /= 2.5;
 
 		return power;
 	}

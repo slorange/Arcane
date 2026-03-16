@@ -2,4 +2,4 @@
 
 public abstract record GameCommand;
 
-public record ExecuteAction(string PlayerName, string ActionName, string? Target) : GameCommand;
+public record ExecuteAction(string PlayerName, string ActionName, string Parameters) : GameCommand;

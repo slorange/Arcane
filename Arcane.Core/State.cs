@@ -40,7 +40,11 @@ public class State
 
 	public void StartGame()
 	{
-		Market = new Market(SpellLibrary.AllSpells());
+		var pool = new List<Card>();
+		pool.AddRange(SpellLibrary.AllSpells());
+		pool.AddRange(CardLibrary.AllCards());
+		Market = new Market(pool);
+
 		GameStarted = true;
 		Round = 1;
 		StartPrep();

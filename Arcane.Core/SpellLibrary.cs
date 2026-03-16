@@ -81,7 +81,7 @@ public static class SpellLibrary
 	public static Spell ManaPulse()
 	{
 		var s = new Spell(
-			name: "ManaPulse",
+			name: "Mana Pulse",
 			school: SpellSchool.Arcane,
 			knowledgeCost: 1,
 			manaCost: 2,
@@ -125,15 +125,15 @@ public static class SpellLibrary
 		return s;
 	}
 
-	public static Spell ManaCharge()
+	public static Spell ArcaneDraw()
 	{
 		var s = new Spell(
-			name: "Mana Charge",
+			name: "Arcane Draw",
 			school: SpellSchool.Arcane,
 			knowledgeCost: 2,
 			manaCost: 0,
 			target: TargetType.Self,
-			manaGain: new Value("1d6")
+			manaGain: new Value("2d6")
 		);
 		return s;
 	}
@@ -146,7 +146,7 @@ public static class SpellLibrary
 			knowledgeCost: 6,
 			manaCost: 0,
 			target: TargetType.Self,
-			manaGain: new Value("2d4")
+			manaGain: new Value("3d6")
 		);
 		return s;
 	}
@@ -156,10 +156,10 @@ public static class SpellLibrary
 		var s = new Spell(
 			name: "Leyline Tap",
 			school: SpellSchool.Arcane,
-			knowledgeCost: 7,
+			knowledgeCost: 10,
 			manaCost: 0,
 			target: TargetType.Self,
-			manaGain: new Value("2d10"),
+			manaGain: new Value("3d20"),
 			oncePerBattle: true
 		);
 		return s;
@@ -333,15 +333,15 @@ public static class SpellLibrary
 		var s = new Spell(
 			name: "Frost Nova",
 			school: SpellSchool.Ice,
-			knowledgeCost: 3,
-			manaCost: 4,
+			knowledgeCost: 5,
+			manaCost: 6,
 			target: TargetType.AllEnemies,
 			oncePerBattle: true
 		);
 
 		s.StatusEffect = new StatusEffect(
 			StatusEffectType.Freeze,
-			1
+			2
 		);
 
 		return s;
@@ -460,10 +460,10 @@ public static class SpellLibrary
 		return s;
 	}
 
-	public static Spell StaticCharge()
+	public static Spell StaticSurge()
 	{
 		var s = new Spell(
-			name: "Static Charge",
+			name: "Static Surge",
 			school: SpellSchool.Lightning,
 			knowledgeCost: 2,
 			manaCost: 2,
@@ -541,6 +541,35 @@ public static class SpellLibrary
 			manaCost: 10,
 			target: TargetType.Enemy,
 			damage: new Value("5d12")
+		);
+
+		return s;
+	}
+
+	public static Spell StaticCharge()
+	{
+		var s = new Spell(
+			name: "Static Charge",
+			school: SpellSchool.Lightning,
+			knowledgeCost: 5,
+			manaCost: 0,
+			target: TargetType.Self,
+			manaGain: new Value("4d4")
+		);
+
+		return s;
+	}
+
+	public static Spell StormChannel()
+	{
+		var s = new Spell(
+			name: "Storm Channel",
+			school: SpellSchool.Lightning,
+			knowledgeCost: 13,
+			manaCost: 0,
+			target: TargetType.Self,
+			manaGain: new Value("6d12"),
+			oncePerBattle: true
 		);
 
 		return s;
@@ -762,6 +791,21 @@ public static class SpellLibrary
 		return s;
 	}
 
+	public static Spell DivinePrayer()
+	{
+		var s = new Spell(
+			name: "Divine Prayer",
+			school: SpellSchool.Holy,
+			knowledgeCost: 7,
+			manaCost: 0,
+			target: TargetType.Self,
+			manaGain: new Value("4d12"),
+			oncePerBattle: true
+		);
+
+		return s;
+	}
+
 
 	// ===== BLOOD =====
 
@@ -873,6 +917,141 @@ public static class SpellLibrary
 			lifesteal: new Value("25%")
 		);
 
+		return s;
+	}
+
+	public static Spell BloodTap()
+	{
+		var s = new Spell(
+			name: "Blood Tap",
+			school: SpellSchool.Blood,
+			knowledgeCost: 6,
+			manaCost: 0,
+			target: TargetType.Self,
+			manaGain: new Value("3d8"),
+			damage: new Value(5)
+		);
+		return s;
+	}
+
+	public static Spell CrimsonOffering()
+	{
+		var s = new Spell(
+			name: "Crimson Offering",
+			school: SpellSchool.Blood,
+			knowledgeCost: 7,
+			manaCost: 0,
+			target: TargetType.Self,
+			manaGain: new Value("7d8"),
+			damage: new Value(10),
+			oncePerBattle: true
+		);
+		return s;
+	}
+
+	// ===== SHIELDS =====
+
+	public static Spell ManaShield()
+	{
+		var s = new Spell(
+			name: "Mana Shield",
+			school: SpellSchool.Arcane,
+			knowledgeCost: 2,
+			manaCost: 3,
+			target: TargetType.Self,
+			shield: new Value("2d8")
+		);
+		return s;
+	}
+
+	public static Spell PrismaticBarrier()
+	{
+		var s = new Spell(
+			name: "Prismatic Barrier",
+			school: SpellSchool.Arcane,
+			knowledgeCost: 9,
+			manaCost: 9,
+			target: TargetType.Self,
+			shield: new Value("4d8")
+		);
+		return s;
+	}
+
+	public static Spell DivineWard()
+	{
+		var s = new Spell(
+			name: "Divine Ward",
+			school: SpellSchool.Holy,
+			knowledgeCost: 3,
+			manaCost: 4,
+			target: TargetType.Self,
+			shield: new Value("3d6")
+		);
+		return s;
+	}
+
+	public static Spell AegisOfFaith()
+	{
+		var s = new Spell(
+			name: "Aegis of Faith",
+			school: SpellSchool.Holy,
+			knowledgeCost: 10,
+			manaCost: 8,
+			target: TargetType.Self,
+			shield: new Value("3d12")
+		);
+		return s;
+	}
+
+	public static Spell StoneSkin()
+	{
+		var s = new Spell(
+			name: "Stone Skin",
+			school: SpellSchool.Earth,
+			knowledgeCost: 2,
+			manaCost: 3,
+			target: TargetType.Self,
+			shield: new Value("2d8")
+		);
+		return s;
+	}
+
+	public static Spell MountainForm()
+	{
+		var s = new Spell(
+			name: "Mountain Form",
+			school: SpellSchool.Earth,
+			knowledgeCost: 10,
+			manaCost: 9,
+			target: TargetType.Self,
+			shield: new Value("4d10")
+		);
+		return s;
+	}
+
+	public static Spell FrostBarrier()
+	{
+		var s = new Spell(
+			name: "Frost Barrier",
+			school: SpellSchool.Ice,
+			knowledgeCost: 3,
+			manaCost: 3,
+			target: TargetType.Self,
+			shield: new Value("4d4")
+		);
+		return s;
+	}
+
+	public static Spell GlacialBulwark()
+	{
+		var s = new Spell(
+			name: "Glacial Bulwark",
+			school: SpellSchool.Ice,
+			knowledgeCost: 10,
+			manaCost: 8,
+			target: TargetType.Self,
+			shield: new Value("3d12")
+		);
 		return s;
 	}
 }

@@ -8,12 +8,14 @@ public class Player
 {
 	public string Name { get; }
 	public int Health { get; private set; }
+	public int Shield { get; private set; }
 	public Resources Resources { get; } = new();
 	public List<Spell> Spells { get; } = new();
 
 	public List<PlayerEffect> Effects = new List<PlayerEffect>();
+	public int AdvancedTraining { get; set; }
 
-	public int MaxHealth = 20;
+	public int MaxHealth = 25;
 	public Player(string name)
 	{
 		Name = name;
@@ -23,8 +25,18 @@ public class Player
 
 	public void TakeDamage(int amount)
 	{
-		Health -= amount;
-		if (Health < 0) Health = 0;
+		if (Shield > 0)
+		{
+			int blocked = Math.Min(Shield, amount);
+			Shield -= blocked;
+			amount -= blocked;
+		}
+
+		if (amount > 0)
+		{
+			Health -= amount;
+			if (Health < 0) Health = 0;
+		}
 	}
 
 	public void Heal(int amount)
@@ -36,6 +48,18 @@ public class Player
 	public void FullHeal()
 	{
 		Health = MaxHealth;
+	}
+
+	public void AddShield(int amount)
+	{
+		if (amount <= 0) return;
+
+		Shield += amount;
+	}
+
+	public void ResetShield()
+	{
+		Shield = 0;
 	}
 
 	public bool IsAlive => Health > 0;

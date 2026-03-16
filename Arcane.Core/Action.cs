@@ -17,7 +17,7 @@ public abstract class PlayerAction
 
 	public abstract bool CanExecute(State state, Player player);
 
-	public abstract void Execute(State state, Player player, List<GameEvent> events);
+	public abstract void Execute(State state, Player player, List<GameEvent> events, string parameters);
 }
 
 public class SpellCastAction : PlayerAction
@@ -36,7 +36,7 @@ public class SpellCastAction : PlayerAction
 				&& !(_spell.OncePerBattle && _spell.UsedThisBattle);
 	}
 
-	public override void Execute(State state, Player player, List<GameEvent> events)
+	public override void Execute(State state, Player player, List<GameEvent> events, string parameters)
 	{
 		if (!player.Resources.SpendMana(_spell.ManaCost))
 		{
@@ -56,7 +56,10 @@ public class SpellCastAction : PlayerAction
 
 		if (_spell.Target == TargetType.Enemy)
 		{
-			var target = monsters.First();
+			Monster target = null;
+			if (!string.IsNullOrEmpty(parameters))
+				target = monsters.FirstOrDefault(m => m.Name.Equals(parameters, StringComparison.OrdinalIgnoreCase));
+			target??= monsters.First();
 			monsters.Clear();
 			monsters.Add(target);
 		}
@@ -185,6 +188,14 @@ public class SpellCastAction : PlayerAction
 			events.Add(new GameEventMessage($"{player.Name} heals {heal} HP."));
 		}
 
+		if (_spell.Shield.Type != ValueKind.Flat || _spell.Shield.Flat != 0)
+		{
+			int shield = _spell.Shield.Resolve(events, $"{_spell.Name}");
+
+			player.AddShield(shield);
+			events.Add(new GameEventMessage($"{player.Name} gains {shield} shield."));
+		}
+
 		if (_spell.ManaGain.Type != ValueKind.Flat || _spell.ManaGain.Flat != 0)
 		{
 			int mana = _spell.ManaGain.Resolve(events, $"{_spell.Name}");
@@ -212,39 +223,47 @@ public class SpellCastAction : PlayerAction
 	}
 }
 
-public class BuySpellAction : PlayerAction
+public class BuyCardAction : PlayerAction
 {
-	private readonly Spell _spell;
+	private readonly Card _card;
 
-	public BuySpellAction(Spell spell) : base($"Buy {spell.Name}")
+	public BuyCardAction(Card card) : base($"Buy {card.Name}")
 	{
-		_spell = spell;
+		_card = card;
 	}
 
 	public override bool CanExecute(State state, Player player)
 	{
 		return state.CurrentPhase == Phase.Prep
-			   && player.Resources.Knowledge >= _spell.KnowledgeCost;
+			   && player.Resources.Knowledge >= _card.KnowledgeCost;
 	}
 
-	public override void Execute(State state, Player player, List<GameEvent> events)
+	public override void Execute(State state, Player player, List<GameEvent> events, string parameters)
 	{
-		if (!player.Resources.SpendKnowledge(_spell.KnowledgeCost))
+		if (!player.Resources.SpendKnowledge(_card.KnowledgeCost))
 		{
 			events.Add(new ErrorOccurred("Not enough knowledge."));
 			return;
 		}
 
-		player.Spells.Add(_spell);
-		state.Market.Purchase(_spell);
+		state.Market.Purchase(_card);
 
-		events.Add(new SpellPurchased(player.Name, _spell.Name));
+		if (_card is Spell spell)
+		{
+			player.Spells.Add(spell);
+			events.Add(new SpellPurchased(player.Name, spell.Name));
+		}
+		else if (_card is Passive passive)
+		{
+			passive.Apply(player);
+			events.Add(new GameEventMessage($"{player.Name} gains {passive.Name}."));
+		}
 	}
 }
 
 public class ChannelAction : PlayerAction
 {
-	private const int ManaGain = 1;
+	private Dice ManaGain = new Dice("1d6");
 
 	public ChannelAction() : base("Channel") { }
 
@@ -253,28 +272,32 @@ public class ChannelAction : PlayerAction
 		return state.CurrentPhase == Phase.Battle;
 	}
 
-	public override void Execute(State state, Player player, List<GameEvent> events)
+	public override void Execute(State state, Player player, List<GameEvent> events, string parameters)
 	{
-		player.Resources.AddMana(ManaGain);
-		events.Add(new PlayerGainedMana(player.Name, ManaGain));
+		var mana = ManaGain.Roll(events, "Channel");
+		player.Resources.AddMana(mana);
+		events.Add(new PlayerGainedMana(player.Name, mana));
 	}
 }
 
 public class TrainAction : PlayerAction
 {
-	private const int ManaCost = 1;
-
-	public TrainAction() : base("Train") { }
+	public TrainAction(int AdvancedTraining) : base($"Train lv{AdvancedTraining + 1}") { }
 
 	public override bool CanExecute(State state, Player player)
 	{
-		return state.CurrentPhase == Phase.Prep 
-				&& player.Resources.HasMana(ManaCost);
+		int cost = 1 + player.AdvancedTraining;
+
+		return state.CurrentPhase == Phase.Prep
+			&& player.Resources.HasMana(cost);
 	}
 
-	public override void Execute(State state, Player player, List<GameEvent> events)
+	public override void Execute(State state, Player player, List<GameEvent> events, string parameters)
 	{
-		if (!player.Resources.Train())
+		int cost = 1 + player.AdvancedTraining;
+		int progress = 1 + player.AdvancedTraining;
+
+		if (!player.Resources.Train(cost, progress))
 		{
 			events.Add(new GameEventMessage($"{player.Name} trains."));
 		}
@@ -294,7 +317,7 @@ public class EndTurnAction : PlayerAction
 		return true;
 	}
 
-	public override void Execute(State state, Player player, List<GameEvent> events)
+	public override void Execute(State state, Player player, List<GameEvent> events, string parameters)
 	{
 		events.Add(new GameEventMessage("Turn ended."));
 		state.EndPrepRound();
@@ -313,7 +336,7 @@ public class RestAction : PlayerAction
 			   && player.Health < player.MaxHealth;
 	}
 
-	public override void Execute(State state, Player player, List<GameEvent> events)
+	public override void Execute(State state, Player player, List<GameEvent> events, string parameters)
 	{
 		int before = player.Health;
 		player.Heal(HealAmount);
@@ -334,7 +357,7 @@ public class LearnAction : PlayerAction
 		return state.CurrentPhase == Phase.Prep;
 	}
 
-	public override void Execute(State state, Player player, List<GameEvent> events)
+	public override void Execute(State state, Player player, List<GameEvent> events, string parameters)
 	{
 		player.Resources.AddKnowledge(KnowledgeGain);
 		events.Add(new PlayerGainedKnowledge(player.Name, KnowledgeGain));

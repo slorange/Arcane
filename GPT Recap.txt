@@ -20,7 +20,7 @@ Within phase 1 there are 9 steps:
 8. Potions 
 9. Factions
 
-We are currently finishing up step 5.
+We are currently on step 6.
 
 1. Core engine and console app
 The project currently runs as a c# console application, but the game logic is contained inside a Core engine so the same engine could later support a graphical UI or Simulator where all user actions are automated and all game output is hidden
@@ -59,10 +59,11 @@ Mana Cost
 Target Type
 Damage
 Heal
+Shield
 Status Effects
 Special flags (such as OncePerBattle)
 
-Damage and healing values are handled through a Value system.
+Damage, healing and shield values are handled through a Value system.
 
 The Value system supports three types:
 Flat values
@@ -188,11 +189,14 @@ The following have not been implemented:
 6. Artifact
 Artifacts are passive items that give buffs, either earned from battle or awarded from faction reputation
 
+While not an artifact exactly, I've add the first non-spell card (Advanced Training) to boost the base Train action. Artifacts are the next step in development, after the playtesting feedback has been addressed.
+
 7. Tools
 Tools are similar to artifacts but they are first learned in the market with knowledge, and then require mana upkeep during prep to be active for the battle phase.
 
 8. Potions
-Recipes are bought in the market, brewed in prep phase, and used in battle
+Recipes are bought in the market, brewed in prep phase, and used in battle.
+Ideas: Invisibility (similar effect to enemy blind), Mana potion, 
 
 9. Factions
 Gain (or lose) reputation via actions in both prep and battle phases. Unlock rewards, could be spells, artifacts, other buffs or bonuses.
@@ -207,11 +211,10 @@ Lightning and Earth currently do not have a faction
 Some progress into phase 2 has also been made.
 The simulator has not been started but we have an Analyzer tool which computes Spell Value and estimates its appropriate mana cost so we have some spell balance.
 
-
 Playtesting notes:
-- Need more ways to regain mana. Buff Channel to use a dice. Add two more mana gain spells. One onceperbattle and one repeatable
-- Training plateaus around 15 since we only get 15 actions per prep. Going above that takes at least 2 rounds for +1 mana. Need an Advanced Training card that increases cost and value of train by +1. Stackable, maybe ~8 knowledge, maybe 5 in the deck.
-- Enemy damage is too high, although if you survive the hit there is enough healing/lifesteal to get back to full. We need shields, and probably higher base health.
-- Not being able to target enemies is getting to be a problem.
-
-
+- Thinking of removing mana generation spells (except the once per battle ones) and adding in an Advanced Channeling card to match Advanced Training instead. Went doing this I also want to make sure Channeling still feels bad. I don't want the player to be able to draw out battles forever.
+- Low mana aoe spells don't get any use. Early game you only get a few targets at a time. Better to scrap them, or better yet, replace them with AoE CC, because...
+- Lategame with 6+ mid hp targets, we need more varied CC options. Sometimes you get 6 freeze immune targets and can't kill enough in 3 attacks. Desperately need AoE blind & weaken
+- Player buffs need to be reset between battles
+- Maybe we shouldn't be able to use mana regen spells in prep phases after all. It's extra clutter and doesn't feel right
+- Additional balance should wait until after artifacts tools and potions. Potions especially will change a lot.

@@ -9,15 +9,14 @@ public class Market
 {
 	private static Random rng = new Random();
 
-	private readonly List<Spell> _pool;
-
-	public List<Spell> Current { get; } = new();
+	private readonly List<Card> _pool;
+	public List<Card> Current { get; } = new();
 
 	public int ShopSize { get; } = 6;
 
-	public Market(List<Spell> spells)
+	public Market(List<Card> cards)
 	{
-		_pool = [.. spells];
+		_pool = [.. cards];
 		Refresh();
 	}
 
@@ -31,9 +30,9 @@ public class Market
 			Current.Add(shuffled[i]);
 	}
 
-	public void Purchase(Spell spell)
+	public void Purchase(Card card)
 	{
-		Current.Remove(spell);
-		_pool.Remove(spell);
+		Current.Remove(card);
+		_pool.Remove(card);
 	}
 }

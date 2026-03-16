@@ -8,6 +8,7 @@ namespace Arcane.Cmd;
 internal class Program
 {
 	Game game;
+	List<PlayerAction> _currentActions = new();
 
 	static void Main(string[] args)
 	{
@@ -45,10 +46,30 @@ internal class Program
 
 	GameCommand? ParseInput(string input)
 	{
-		if (string.IsNullOrWhiteSpace(input))
-			return null;
+		if (string.IsNullOrWhiteSpace(input)) return null;
 
-		return new ExecuteAction("Player", input.Trim(), null);
+		input = input.Trim();
+
+		// Allow "Train" shorthand for "Train LvX"
+		if (input.Equals("Train", StringComparison.OrdinalIgnoreCase))
+		{
+			var action1 = _currentActions.FirstOrDefault(a => a.Name.StartsWith("Train"));
+			if(action1 != null) return new ExecuteAction("Player", action1.Name, null);
+		}
+
+		var action = _currentActions
+			.OrderByDescending(a => a.Name.Length) // longest first
+			.FirstOrDefault(a => input.StartsWith(a.Name, StringComparison.OrdinalIgnoreCase));
+
+		if (action == null)
+		{
+			Console.WriteLine($"Action {input} not available.");
+			return null;
+		}
+
+		var parametersText = input.Substring(action.Name.Length).Trim();
+
+		return new ExecuteAction("Player", action.Name, parametersText);
 	}
 
 	void Render(IEnumerable<GameEvent> events)
@@ -75,7 +96,7 @@ internal class Program
 					break;
 
 				case PlayerTookDamage d:
-					Console.WriteLine($"{d.PlayerName} takes {d.Amount} damage (HP: {d.RemainingHealth})");
+					Console.WriteLine($"{d.PlayerName} takes {d.Amount} damage (HP: {d.RemainingHealth} Shield: {d.RemainingShield})");
 					break;
 
 				case GameEnded:
@@ -143,9 +164,9 @@ internal class Program
 		foreach (var player in game.GetPlayers())
 		{
 			if (phaseInfo.Phase == Phase.Prep)
-				Console.WriteLine($"{player.Name} | HP: {player.Health} | Mana: {player.Resources.CurrentMana} | Knowledge: {player.Resources.Knowledge}");
+				Console.WriteLine($"{player.Name} | HP: {player.Health} | Mana: {player.Resources.CurrentMana} / {player.Resources.MaxMana} | Knowledge: {player.Resources.Knowledge}");
 			else
-				Console.WriteLine($"{player.Name} | HP: {player.Health} | Mana: {player.Resources.CurrentMana}");
+				Console.WriteLine($"{player.Name} | HP: {player.Health} | Mana: {player.Resources.CurrentMana} / {player.Resources.MaxMana}");
 
 			if (player.Spells.Any())
 			{
@@ -236,10 +257,10 @@ internal class Program
 		Console.ForegroundColor = ConsoleColor.Cyan;
 		var player = game.GetPlayers().First();
 
-		var actions = game.GetAvailableActions(player);
+		_currentActions  = game.GetAvailableActions(player);
 
 		Console.WriteLine("Available actions:");
-		foreach (var action in actions)
+		foreach (var action in _currentActions)
 		{
 			Console.WriteLine($"  {action.Name}");
 		}

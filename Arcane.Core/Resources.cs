@@ -34,18 +34,18 @@ public class Resources
 		return true;
 	}
 
-	public bool Train()
+	public bool Train(int manaCost, int progressGain)
 	{
-		if (CurrentMana < 1) return false;
+		if (CurrentMana < manaCost) return false;
 
-		CurrentMana--;
-		TrainingProgress++;
+		CurrentMana -= manaCost;
+		TrainingProgress += progressGain;
 
 		if (TrainingProgress >= MaxMana)
 		{
-			TrainingProgress = 0;
-			MaxMana++;   // scaling
-			return true; // leveled up
+			TrainingProgress -= MaxMana; // important change
+			MaxMana++;
+			return true;
 		}
 
 		return false;
