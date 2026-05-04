@@ -17,11 +17,12 @@ public enum MonsterTheme
 
 public class Monster
 {
-	public string Name { get; }
+	public Game Game;
+	public string Name { get; private set; }
 	public int Health { get; private set; }
-	public Value AttackDamage { get; }
-	public int Threat { get; }
-	public MonsterTheme Theme { get; }
+	public Value AttackDamage { get; private set; }
+	public int Threat { get; private set; }
+	public MonsterTheme Theme { get; private set; }
 	public List<StatusEffect> Effects { get; } = new();
 	public HashSet<SpellSchool> Immunities { get; } = new();
 	public HashSet<SpellSchool> Resistances { get; } = new();
@@ -39,10 +40,11 @@ public class Monster
 		MonsterLibrary.ApplyThemeDefaults(this);
 	}
 
-	public Monster Clone()
+	public Monster Clone(Game game)
 	{
 		var m = new Monster(Name, Health, AttackDamage, Threat, Theme);
 
+		m.Game = game;
 		m.Immunities.UnionWith(Immunities);
 		m.Resistances.UnionWith(Resistances);
 		m.Weaknesses.UnionWith(Weaknesses);
@@ -51,10 +53,14 @@ public class Monster
 		return m;
 	}
 
-	public void TakeDamage(int amount)
+	public void TakeDamage(int amount, Spell? spell)
 	{
 		Health -= amount;
-		if (Health < 0) Health = 0;
+		if (Health < 0)
+		{
+			Health = 0;
+			Game.RaiseEnemyKilled(this, spell);
+		}
 	}
 
 	public bool IsAlive => Health > 0;

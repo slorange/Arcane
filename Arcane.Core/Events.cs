@@ -1,7 +1,7 @@
 ﻿namespace Arcane.Core.Events;
 
+// Used to talk to Console / Simulator
 public abstract record GameEvent;
-
 public record GameStarted(List<string> PlayerNames) : GameEvent;
 public record RoundStarted(int RoundNumber) : GameEvent;
 public record PlayerJoined(string PlayerName) : GameEvent;
@@ -15,3 +15,4 @@ public record MonsterSpawned(string Name, int Health) : GameEvent;
 public record MonsterTookDamage(string Name, int Damage, int RemainingHealth) : GameEvent;
 public record MonsterDefeated(string Name) : GameEvent;
 public record GameEventMessage(string Message) : GameEvent;
+

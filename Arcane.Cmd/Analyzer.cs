@@ -119,7 +119,7 @@ public  class Analyzer
 		if (s.StatusEffect.Type == StatusEffectType.Burn)
 		{
 			var burn = ExpectedDice(s.StatusEffect.BurnDice.Value);
-			power += burn * 2;
+			power += burn * 1.5;
 		}
 
 		// OTHER STATUS

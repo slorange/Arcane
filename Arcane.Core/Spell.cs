@@ -9,18 +9,18 @@ namespace Arcane.Core;
 public class Spell : Card
 {
 	// Static Values
-	public SpellSchool School { get; }
-	public TargetType Target { get; }
-	public int ManaCost { get; }
-	public Value Damage { get; }
-	public Value SplashDamage { get; }
-	public Value Heal { get; }
-	public Value Shield { get; }
-	public Value Lifesteal { get; }
-	public Value ManaGain { get; }
+	public SpellSchool School { get; set; }
+	public TargetType Target { get; set; }
+	public int ManaCost { get; set; }
+	public Value Damage { get; set; }
+	public Value SplashDamage { get; set; }
+	public Value Heal { get; set; }
+	public Value Shield { get; set; }
+	public Value Lifesteal { get; set; }
+	public Value ManaGain { get; set; }
 	public StatusEffect StatusEffect { get; set; }
 	public PlayerEffect? PlayerEffect { get; set; }
-	public bool OncePerBattle { get; }
+	public bool OncePerBattle { get; set; }
 
 	// Game state
 	public bool UsedThisBattle { get; set; } = false;
@@ -65,8 +65,10 @@ public class Spell : Card
 	{
 		var parts = new List<string>();
 
+		var dmg = false;
 		if (Damage.Type != ValueKind.Flat || Damage.Flat != 0)
 		{
+			dmg = true;
 			if (Target == TargetType.AllEnemies)
 				parts.Add($"{Damage} damage to all enemies");
 			else if (Target == TargetType.Cleave)
@@ -97,34 +99,35 @@ public class Spell : Card
 
 		if (StatusEffect.Type != StatusEffectType.None)
 		{
+			var aoe = Target == TargetType.AllEnemies && !dmg ? "all enemies " : "";
 			switch (StatusEffect.Type)
 			{
 				case StatusEffectType.Burn:
-					parts.Add($"burn {StatusEffect.BurnDice}");
+					parts.Add($"burn {aoe}for {StatusEffect.BurnDice}");
 					break;
 
 				case StatusEffectType.Freeze:
-					parts.Add($"freeze for {StatusEffect.Duration} turn(s)");
+					parts.Add($"freeze {aoe}for {StatusEffect.Duration} turn(s)");
 					break;
 
 				case StatusEffectType.Shock:
-					parts.Add($"shock for {StatusEffect.Duration} turn(s)");
+					parts.Add($"shock {aoe}for {StatusEffect.Duration} turn(s)");
 					break;
 
 				case StatusEffectType.Brittle:
-					parts.Add($"brittle for {StatusEffect.Duration} turn(s)");
+					parts.Add($"brittle {aoe}for {StatusEffect.Duration} turn(s)");
 					break;
 
 				case StatusEffectType.Weak:
-					parts.Add($"weaken for {StatusEffect.Duration} turn(s)");
+					parts.Add($"weaken {aoe}for {StatusEffect.Duration} turn(s)");
 					break;
 
 				case StatusEffectType.Blinded:
-					parts.Add($"blind for {StatusEffect.Duration} turn(s)");
+					parts.Add($"blind {aoe}for {StatusEffect.Duration} turn(s)");
 					break;
 
 				case StatusEffectType.Marked:
-					parts.Add($"mark for {StatusEffect.Duration} turn(s)");
+					parts.Add($"mark {aoe}for {StatusEffect.Duration} turn(s)");
 					break;
 			}
 		}
@@ -153,14 +156,12 @@ public class Spell : Card
 		return string.Join(", ", parts);
 	}
 
-	public string GetPlayerDisplay()
+	public override string GetDisplay(bool market = false)
 	{
-		return $"{Name} ({School}) — {ManaCost} Mana — {GetDescription()}";
-	}
-
-	public override string GetMarketDisplay()
-	{
-		return $"{$"{Name} ({School})", -26} — {KnowledgeCost} Knowledge — {ManaCost} Mana — {GetDescription()}";
+		if (market)
+			return $"{$"{Name} ({School})",-26} — {KnowledgeCost} Knowledge — {ManaCost} Mana — {GetDescription()}";
+		else
+			return $"{$"{Name} ({School})",-26} — {ManaCost} Mana — {GetDescription()}";
 	}
 }
 
@@ -200,7 +201,7 @@ public enum StatusEffectType
 
 public class StatusEffect
 {
-	public StatusEffectType Type { get; }
+	public StatusEffectType Type { get; set; }
 	public int Duration { get; set; }
 	public Dice? BurnDice { get; set; }
 

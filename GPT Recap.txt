@@ -78,20 +78,9 @@ Values can be created from strings such as:
 Dice rolls generate both a result and a list of rolls so the console output can show the full roll breakdown.
 
 Dice can be upgraded and downgraded.
-Upgrades increase dice level first and then number of dice.
-Downgrades decrease number of dice and then dice level.
-Upgrade Example:
-2d10 -> 2d12 -> 2d20 -> 3d20 -> 4d20
-
-Spell effects supported so far include:
-Single target damage
-Area damage
-Cleave damage
-Healing
-Mana generation
-Lifesteal
-Status Effects
-Player Buffs
+Upgrades increase either dice level or number of dice, whichever is better
+Downgrades decrease whichever is worse.
+Example: 2d6 -> 3d6 -> 4d6 -> 4d8 -> 5d8 -> 5d10 -> 6d10 -> 6d12 -> 6d20
 
 Status Effects
 Burn - burn applies a burn dice which downgrades each turn. Additional burns upgrade the dice
@@ -112,6 +101,7 @@ ConsumeOnUse flag
 
 These allow effects such as:
 "Your next fire spell is stronger"
+"Your earth spells are stronger for the next 3 turns"
 
 Market System
 There is a spell market where players can purchase spells.
@@ -184,19 +174,30 @@ Immune to Weak Status
 RestlessSpirit (Undead)
 Immune to ice and freeze
 
-The following have not been implemented:
+The following are planned but have not been implemented:
 
 6. Artifact
 Artifacts are passive items that give buffs, either earned from battle or awarded from faction reputation
 
-While not an artifact exactly, I've add the first non-spell card (Advanced Training) to boost the base Train action. Artifacts are the next step in development, after the playtesting feedback has been addressed.
+While not an artifact exactly, I've add the first non-spell cards (Advanced Training and Advanced Channeling) to boost the base Train and Channel actions. Artifacts are the next step in development.
+Cards will need a bit of a refactor, at the moment Base Card has the knowledge field, so the assumption is all cards are in the market. This will not be the case after Artifacts are in. We need 
+Cards 
+	Market Cards
+		Spells
+		Upgrades
+		Potion Recipes
+		Tools
+	Reward Cards
+		Artifacts
+The idea is after each battle the player is offered 3 artifacts and they have to choose one to add to their character
+the 3 artifacts come from 2 sources. 2 cards from a general pool. 1 card from the enemy theme pool. If they killed Goblins they get a Goblin themed artifact from this pile.
 
 7. Tools
 Tools are similar to artifacts but they are first learned in the market with knowledge, and then require mana upkeep during prep to be active for the battle phase.
 
 8. Potions
 Recipes are bought in the market, brewed in prep phase, and used in battle.
-Ideas: Invisibility (similar effect to enemy blind), Mana potion, 
+Ideas: Invisibility (similar effect to enemy blind), Mana potion, Healing, Vitality (max health)
 
 9. Factions
 Gain (or lose) reputation via actions in both prep and battle phases. Unlock rewards, could be spells, artifacts, other buffs or bonuses.
@@ -210,11 +211,3 @@ Lightning and Earth currently do not have a faction
 
 Some progress into phase 2 has also been made.
 The simulator has not been started but we have an Analyzer tool which computes Spell Value and estimates its appropriate mana cost so we have some spell balance.
-
-Playtesting notes:
-- Thinking of removing mana generation spells (except the once per battle ones) and adding in an Advanced Channeling card to match Advanced Training instead. Went doing this I also want to make sure Channeling still feels bad. I don't want the player to be able to draw out battles forever.
-- Low mana aoe spells don't get any use. Early game you only get a few targets at a time. Better to scrap them, or better yet, replace them with AoE CC, because...
-- Lategame with 6+ mid hp targets, we need more varied CC options. Sometimes you get 6 freeze immune targets and can't kill enough in 3 attacks. Desperately need AoE blind & weaken
-- Player buffs need to be reset between battles
-- Maybe we shouldn't be able to use mana regen spells in prep phases after all. It's extra clutter and doesn't feel right
-- Additional balance should wait until after artifacts tools and potions. Potions especially will change a lot.

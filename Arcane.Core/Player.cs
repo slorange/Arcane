@@ -1,26 +1,36 @@
 ﻿using Arcane.Core.Cards;
 using Arcane.Core.Events;
 using System.Numerics;
+using static Arcane.Core.Cards.Artifact;
 
 namespace Arcane.Core;
 
 public class Player
 {
-	public string Name { get; }
+	Game Game;
+	public string Name { get; private set; }
 	public int Health { get; private set; }
 	public int Shield { get; private set; }
-	public Resources Resources { get; } = new();
+	public Resources Resources { get; set; } = new();
 	public List<Spell> Spells { get; } = new();
+	public List<Artifact> Artifacts { get; } = new();
+	public List<Implement> Implements { get; } = new();
 
 	public List<PlayerEffect> Effects = new List<PlayerEffect>();
-	public int AdvancedTraining { get; set; }
+	public int TrainingBonus { get; set; }
+	public int ChannelBonus { get; set; }
 
 	public int MaxHealth = 25;
-	public Player(string name)
+
+
+	public Player(string name, Game game)
 	{
+		Game = game;
 		Name = name;
 		Health = MaxHealth;
-		Spells.Add(SpellLibrary.MagicMissile());
+		var mm = SpellLibrary.MagicMissile();
+		mm.Game = game;
+		Spells.Add(mm);
 	}
 
 	public void TakeDamage(int amount)
@@ -60,6 +70,11 @@ public class Player
 	public void ResetShield()
 	{
 		Shield = 0;
+	}
+
+	public void ResetBuffs()
+	{
+		Effects.Clear();
 	}
 
 	public bool IsAlive => Health > 0;

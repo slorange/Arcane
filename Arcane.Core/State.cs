@@ -5,7 +5,8 @@ namespace Arcane.Core;
 public enum Phase
 {
 	Prep,
-	Battle
+	Battle,
+	ArtifactChoice
 }
 
 public record PhaseInfo(
@@ -19,31 +20,37 @@ public record PhaseInfo(
 public record AdvanceResult(
 	bool TriggerMonsterAttack,
 	bool EnteredBattle,
-	bool EnteredPrep,
+	bool EnteredPrep, 
+	bool EnteredArtifactChoice,
 	bool RoundAdvanced
 );
 
 public class State
 {
-	public List<Player> Players { get; } = new();
+	public Game Game;
+	public List<Player> Players { get; private set; } = new();
 	public int Round { get; private set; } = 1;
 	public bool GameStarted { get; private set; }
-	public Market Market { get; private set; } = null!;
-	public List<Monster> Monsters { get; } = new();
+	public Market Market { get; private set; }
+	public List<Monster> Monsters { get; private set; } = new();
 	public Phase CurrentPhase { get; private set; } = Phase.Prep;
 	public int PrepRoundsRemaining { get; private set; }
 	public int PrepActionsRemaining { get; private set; }
 	public int TurnNumber { get; private set; } = 1;
 	public int BattleActionsThisCycle { get; private set; } = 0;
-	public List<MonsterTheme> EncounterHistory { get; } = new();
+	public List<MonsterTheme> EncounterHistory { get; private set; } = new();
 	public PhaseInfo GetPhaseInfo() => new PhaseInfo(CurrentPhase, Round, PrepRoundsRemaining, PrepActionsRemaining, BattleActionsThisCycle);
+	public ArtifactDeck ArtifactDeck { get; private set; }
 
-	public void StartGame()
+	public void StartGame(Game game)
 	{
+		Game = game;
 		var pool = new List<Card>();
 		pool.AddRange(SpellLibrary.AllSpells());
-		pool.AddRange(CardLibrary.AllCards());
+		pool.AddRange(CardLibrary.AllMarketCards());
+		foreach(var card in pool) card.Game = Game;
 		Market = new Market(pool);
+		ArtifactDeck = new ArtifactDeck();
 
 		GameStarted = true;
 		Round = 1;
@@ -74,6 +81,8 @@ public class State
 		bool enteredBattle = false;
 		bool enteredPrep = false;
 		bool roundAdvanced = false;
+		bool enteredArtifactChoice = false;
+
 
 		if (CurrentPhase == Phase.Prep)
 		{
@@ -111,13 +120,18 @@ public class State
 			// Battle ends when monsters dead
 			if (!Monsters.Any(m => m.IsAlive))
 			{
-				StartPrep();
-				Round++;
-				enteredPrep = true;
-				roundAdvanced = true;
+				CurrentPhase = Phase.ArtifactChoice;
+				enteredArtifactChoice = true;
 			}
 		}
+		else if (CurrentPhase == Phase.ArtifactChoice)
+		{
+			StartPrep();
+			Round++;
+			enteredPrep = true;
+			roundAdvanced = true;
+		}
 
-		return new AdvanceResult(triggerAttack, enteredBattle, enteredPrep, roundAdvanced);
+		return new AdvanceResult(triggerAttack, enteredBattle, enteredPrep, enteredArtifactChoice, roundAdvanced);
 	}
 }

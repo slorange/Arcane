@@ -7,6 +7,7 @@ namespace Arcane.Core;
 
 public static class SpellLibrary
 {
+	//This static cache might be a problem once we're simulating
 
 	private static List<Spell>? _allSpells;
 	public static List<Spell> AllSpells()
@@ -83,11 +84,11 @@ public static class SpellLibrary
 		var s = new Spell(
 			name: "Mana Pulse",
 			school: SpellSchool.Arcane,
-			knowledgeCost: 1,
+			knowledgeCost: 3,
 			manaCost: 2,
-			target: TargetType.AllEnemies,
-			damage: new Value("1d6")
+			target: TargetType.AllEnemies
 		);
+		s.StatusEffect = new StatusEffect(StatusEffectType.Marked, 1);
 		return s;
 	}
 
@@ -125,7 +126,7 @@ public static class SpellLibrary
 		return s;
 	}
 
-	public static Spell ArcaneDraw()
+	/*public static Spell ArcaneDraw()
 	{
 		var s = new Spell(
 			name: "Arcane Draw",
@@ -149,17 +150,17 @@ public static class SpellLibrary
 			manaGain: new Value("3d6")
 		);
 		return s;
-	}
+	}*/
 
 	public static Spell LeylineTap()
 	{
 		var s = new Spell(
 			name: "Leyline Tap",
 			school: SpellSchool.Arcane,
-			knowledgeCost: 10,
+			knowledgeCost: 13,
 			manaCost: 0,
 			target: TargetType.Self,
-			manaGain: new Value("3d20"),
+			manaGain: new Value("6d12"),
 			oncePerBattle: true
 		);
 		return s;
@@ -186,8 +187,8 @@ public static class SpellLibrary
 		var s = new Spell(
 			name: "Burning Curse",
 			school: SpellSchool.Fire,
-			knowledgeCost: 4,
-			manaCost: 2,
+			knowledgeCost: 3,
+			manaCost: 1,
 			target: TargetType.Enemy
 		);
 
@@ -214,27 +215,13 @@ public static class SpellLibrary
 		return s;
 	}
 
-	public static Spell CinderBurst()
-	{
-		var s = new Spell(
-			name: "Cinder Burst",
-			school: SpellSchool.Fire,
-			knowledgeCost: 2,
-			manaCost: 2,
-			target: TargetType.AllEnemies,
-			damage: new Value("1d6")
-		);
-
-		return s;
-	}
-
 	public static Spell Firestorm()
 	{
 		var s = new Spell(
 			name: "Firestorm",
 			school: SpellSchool.Fire,
-			knowledgeCost: 7,
-			manaCost: 7,
+			knowledgeCost: 6,
+			manaCost: 6,
 			target: TargetType.AllEnemies,
 			damage: new Value("1d6")
 		);
@@ -273,8 +260,8 @@ public static class SpellLibrary
 		var s = new Spell(
 			name: "Inferno",
 			school: SpellSchool.Fire,
-			knowledgeCost: 12,
-			manaCost: 17,
+			knowledgeCost: 13,
+			manaCost: 14,
 			target: TargetType.AllEnemies,
 			damage: new Value("2d8")
 		);
@@ -293,8 +280,8 @@ public static class SpellLibrary
 		var s = new Spell(
 			name: "Volcanic Lance",
 			school: SpellSchool.Fire,
-			knowledgeCost: 11,
-			manaCost: 14,
+			knowledgeCost: 13,
+			manaCost: 12,
 			target: TargetType.Enemy,
 			damage: new Value("5d10")
 		);
@@ -441,9 +428,14 @@ public static class SpellLibrary
 			school: SpellSchool.Lightning,
 			knowledgeCost: 2,
 			manaCost: 2,
-			target: TargetType.AllEnemies,
-			damage: new Value("1d6")
+			target: TargetType.AllEnemies
 		);
+
+		s.StatusEffect = new StatusEffect(
+			StatusEffectType.Shock,
+			1
+		);
+
 		return s;
 	}
 
@@ -546,7 +538,7 @@ public static class SpellLibrary
 		return s;
 	}
 
-	public static Spell StaticCharge()
+	/*public static Spell StaticCharge()
 	{
 		var s = new Spell(
 			name: "Static Charge",
@@ -558,17 +550,17 @@ public static class SpellLibrary
 		);
 
 		return s;
-	}
+	}*/
 
 	public static Spell StormChannel()
 	{
 		var s = new Spell(
 			name: "Storm Channel",
 			school: SpellSchool.Lightning,
-			knowledgeCost: 13,
+			knowledgeCost: 10,
 			manaCost: 0,
 			target: TargetType.Self,
-			manaGain: new Value("6d12"),
+			manaGain: new Value("3d20"),
 			oncePerBattle: true
 		);
 
@@ -782,8 +774,8 @@ public static class SpellLibrary
 		var s = new Spell(
 			name: "Sacred Blade",
 			school: SpellSchool.Holy,
-			knowledgeCost: 6,
-			manaCost: 5,
+			knowledgeCost: 5,
+			manaCost: 4,
 			target: TargetType.Enemy,
 			damage: new Value("4d8")
 		);
@@ -920,7 +912,7 @@ public static class SpellLibrary
 		return s;
 	}
 
-	public static Spell BloodTap()
+	/*public static Spell BloodTap()
 	{
 		var s = new Spell(
 			name: "Blood Tap",
@@ -932,7 +924,7 @@ public static class SpellLibrary
 			damage: new Value(5)
 		);
 		return s;
-	}
+	}*/
 
 	public static Spell CrimsonOffering()
 	{
@@ -946,6 +938,24 @@ public static class SpellLibrary
 			damage: new Value(10),
 			oncePerBattle: true
 		);
+		return s;
+	}
+
+	public static Spell CripplingMiasma()
+	{
+		var s = new Spell(
+			name: "Crippling Miasma",
+			school: SpellSchool.Blood,
+			knowledgeCost: 5,
+			manaCost: 6,
+			target: TargetType.AllEnemies
+		);
+
+		s.StatusEffect = new StatusEffect(
+			StatusEffectType.Weak,
+			2
+		);
+
 		return s;
 	}
 
@@ -970,7 +980,7 @@ public static class SpellLibrary
 			name: "Prismatic Barrier",
 			school: SpellSchool.Arcane,
 			knowledgeCost: 9,
-			manaCost: 9,
+			manaCost: 8,
 			target: TargetType.Self,
 			shield: new Value("4d8")
 		);
@@ -1022,7 +1032,7 @@ public static class SpellLibrary
 			name: "Mountain Form",
 			school: SpellSchool.Earth,
 			knowledgeCost: 10,
-			manaCost: 9,
+			manaCost: 10,
 			target: TargetType.Self,
 			shield: new Value("4d10")
 		);

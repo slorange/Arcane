@@ -15,13 +15,10 @@ public enum ValueKind
 
 public struct Value
 {
-	public ValueKind Type { get; }
-
-	public int Flat { get; }
-
-	public Dice Dice { get; }
-
-	public double Percent { get; }
+	public ValueKind Type { get; set; }
+	public int Flat { get; set; }
+	public Dice Dice { get; set; }
+	public double Percent { get; set; }
 
 	public Value(int flat)
 	{
@@ -142,8 +139,8 @@ public struct Dice
 {
 	static Random rng = new Random();
 
-	public int Count { get; }
-	public int Sides { get; }
+	public int Count { get; set; }
+	public int Sides { get; set; }
 
 	public Dice(int count, int sides)
 	{
@@ -162,7 +159,8 @@ public struct Dice
 		Sides = int.Parse(parts[1]);
 	}
 
-	public Dice Modify(int modifier, List<GameEvent> events = null, string reasons = "")
+	// Old modify
+	/*public Dice Modify(int modifier, List<GameEvent> events = null, string reasons = "")
 	{
 		int count = Count;
 		int sides = Sides;
@@ -201,6 +199,81 @@ public struct Dice
 			}
 		}
 		var newDice = new Dice(count, ladder[index]);
+		if (events != null && !string.IsNullOrEmpty(reasons))
+		{
+			reasons = reasons.TrimEnd(' ', ',');
+			events.Add(new GameEventMessage($"{this} -> {newDice} because of {reasons}"));
+		}
+
+		return newDice;
+	}*/
+
+	public Dice Modify(int modifier, List<GameEvent> events = null, string reasons = "")
+	{
+		int count = Count;
+		int sides = Sides;
+
+		int[] ladder = { 4, 6, 8, 10, 12, 20 };
+
+		int index = Array.IndexOf(ladder, sides);
+		if (index < 0) index = 1; // fallback to d6
+
+		for (int step = 0; step < Math.Abs(modifier); step++)
+		{
+			var current = new Dice(count, ladder[index]);
+
+			if (modifier > 0)
+			{
+				// Option 1: increase sides
+				Dice? upSides = null;
+				if (index < ladder.Length - 1)
+					upSides = new Dice(count, ladder[index + 1]);
+
+				// Option 2: increase count
+				var upCount = new Dice(count + 1, ladder[index]);
+
+				// Choose best
+				if (upSides == null || upCount.Average > upSides.Value.Average)
+				{
+					count++;
+				}
+				else
+				{
+					index++;
+				}
+			}
+			else // modifier < 0
+			{
+				bool canReduceSides = index > 0;
+				bool canReduceCount = count > 1;
+
+				// If neither is possible -> stop degrading
+				if (!canReduceSides && !canReduceCount) break;
+
+				Dice? downSides = canReduceSides ? new Dice(count, ladder[index - 1]) : null;
+				Dice? downCount = canReduceCount ? new Dice(count - 1, ladder[index]) : null;
+
+				if (downSides == null)
+				{
+					count--;
+				}
+				else if (downCount == null)
+				{
+					index--;
+				}
+				else if (downCount.Value.Average < downSides.Value.Average)
+				{
+					count--;
+				}
+				else
+				{
+					index--;
+				}
+			}
+		}
+
+		var newDice = new Dice(count, ladder[index]);
+
 		if (events != null && !string.IsNullOrEmpty(reasons))
 		{
 			reasons = reasons.TrimEnd(' ', ',');

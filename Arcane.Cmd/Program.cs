@@ -49,6 +49,12 @@ internal class Program
 		if (string.IsNullOrWhiteSpace(input)) return null;
 
 		input = input.Trim();
+		
+		if (input.Equals("save", StringComparison.OrdinalIgnoreCase))
+			return new SaveCommand();
+
+		if (input.Equals("load", StringComparison.OrdinalIgnoreCase))
+			return new LoadCommand();
 
 		// Allow "Train" shorthand for "Train LvX"
 		if (input.Equals("Train", StringComparison.OrdinalIgnoreCase))
@@ -152,11 +158,16 @@ internal class Program
 			Console.WriteLine($"Prep Rounds Remaining: {phaseInfo.PrepRoundsRemaining}");
 			Console.WriteLine($"Actions Remaining: {phaseInfo.PrepActionsRemaining}");
 		}
-		else
+		else if (phaseInfo.Phase == Phase.Battle)
 		{
 			Console.WriteLine(
 				$"Round {phaseInfo.RoundNumber} - Battle Phase " +
 				$"(Actions this cycle: {phaseInfo.BattleActionsThisCycle}/3)");
+		}
+		else if (phaseInfo.Phase == Phase.ArtifactChoice)
+		{
+			Console.WriteLine(
+				$"Round {phaseInfo.RoundNumber} - Artifact Choice ");
 		}
 
 		// Players
@@ -173,7 +184,15 @@ internal class Program
 				Console.WriteLine("  Spells:");
 				foreach (var spell in player.Spells)
 				{
-					Console.WriteLine($"    {spell.GetPlayerDisplay()}");
+					Console.WriteLine($"    {spell.GetDisplay()}");
+				}
+			}
+			if (player.Artifacts.Any())
+			{
+				Console.WriteLine("  Artfiacts:");
+				foreach (var artifact in player.Artifacts)
+				{
+					Console.WriteLine($"    {artifact.GetDisplay()}");
 				}
 			}
 
@@ -210,7 +229,7 @@ internal class Program
 				Console.WriteLine("Market:");
 				foreach (var spell in market)
 				{
-					Console.WriteLine(spell.GetMarketDisplay());
+					Console.WriteLine(spell.GetDisplay(true));
 				}
 			}
 			else
@@ -218,7 +237,7 @@ internal class Program
 				Console.WriteLine("Market is empty");
 			}
 		}
-		else
+		else if (phaseInfo.Phase == Phase.Battle)
 		{
 			// Monsters
 			Console.ForegroundColor = ConsoleColor.Red;
@@ -246,6 +265,17 @@ internal class Program
 						Console.WriteLine($"  {monster.Name} (DEFEATED)");
 				}
 			}
+		}
+		else if (phaseInfo.Phase == Phase.ArtifactChoice)
+		{
+			Console.ForegroundColor = ConsoleColor.Yellow;
+			Console.WriteLine();
+			Console.WriteLine("Choose an artifact:");
+			foreach(var artifact in game.State.ArtifactDeck.Current)
+			{
+				Console.WriteLine(artifact.GetDisplay());
+			}
+			
 		}
 
 		Console.ForegroundColor = ConsoleColor.White;

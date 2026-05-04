@@ -3,7 +3,7 @@
 public class Resources
 {
 	public int CurrentMana { get; private set; }
-	public int MaxMana { get; private set; } = 3;
+	public int MaxMana { get; set; } = 3;
 	public int TrainingProgress { get; private set; }
 
 	public int Knowledge { get; private set; } = 10;
